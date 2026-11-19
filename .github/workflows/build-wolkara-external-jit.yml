@@ -1,0 +1,37 @@
+name: Build Wolkara External JIT test IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Record exact launcher commit
+        run: git rev-parse HEAD > build-commit.txt
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Package experimental External JIT IPA
+        run: bash tools/package_external_jit_ipa.sh "$GITHUB_WORKSPACE/Wolkara-StikDebug-unsigned.ipa"
+
+      - name: Upload IPA, commit and build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Wolkara-ExternalJIT-test
+          path: |
+            Wolkara-StikDebug-unsigned.ipa
+            build-commit.txt
+            logs/
+          if-no-files-found: warn
+          retention-days: 7
